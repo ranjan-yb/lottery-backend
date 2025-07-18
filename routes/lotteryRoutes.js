@@ -1,8 +1,8 @@
 const express = require("express");
 const router = express.Router();
-const GameData = require("../models/gameData");
+const GameData = require("../models/user");
 const verifyToken = require('../middleware/verifyToken')
-const User = require('../models/gameData')
+const User = require('../models/user')
 
 router.post("/play", verifyToken, async (req, res) => {
   const { userChoice, userNumber, userColor, amount = 0 } = req.body;
