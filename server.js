@@ -5,6 +5,11 @@ const cors = require("cors");
 
 const lotteryRoutes = require('./routes/lotteryRoutes')
 
+const adminAuthRoutes = require("./routes/adminAuth");
+const apiKeyAdminRoutes = require("./routes/apiKeyAdminRoutes");
+
+
+
 const app = express();
 const PORT = process.env.PORT || 1000;
 
@@ -28,3 +33,7 @@ mongoose
 
   //Lottery Game Routes
 app.use('/api/game', lotteryRoutes);
+
+//ADMIN ROUTE
+app.use("/api/admin", adminAuthRoutes);
+app.use("/api/admin", apiKeyAdminRoutes);
