@@ -29,6 +29,7 @@ const verifyApiKey = async (req, res, next) => {
     };
 
     next();
+    console.log("Middleware passed")
   } catch (err) {
     console.error("API key validation error:", err);
     res.status(500).json({ error: "Internal Server Error" });

@@ -3,9 +3,9 @@ const router = express.Router();
 const GameData = require("../models/user");
 const verifyToken = require('../middleware/verifyToken')
 const User = require('../models/user')
-const verifyApiKey = require('../models/apikey')
+const verifyApiKey = require('../middleware/verifyApiKey')
 
-router.post("/play",verifyApiKey, verifyToken,  async (req, res) => {
+router.post("/play",  async (req, res) => {
   const userId = req.user.id; // from verifyToken middleware
 
   const {
