@@ -96,7 +96,7 @@ router.post("/play",verifyApiKey, verifyToken,  async (req, res) => {
       period: new Date().getTime().toString(),
     });
 
-    res.status(200).json({
+    return res.status(200).json({
       message: "Game played successfully",
       result: winAmount > 0 ? "Win" : "Lose",
       winAmount,
@@ -114,7 +114,7 @@ router.post("/play",verifyApiKey, verifyToken,  async (req, res) => {
   }
 });
 
-router.get("/history",verifyApiKey, async (req, res) => {
+router.get("/history", async (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const limit = 10;
 
@@ -128,7 +128,7 @@ router.get("/history",verifyApiKey, async (req, res) => {
       .limit(limit)
       .select("period randomChoiceNumber randomChoiceBigSmall randomChoiceColor");
 
-    res.json({
+    res.status(200).json({
       history,
       totalPages,
       currentPage: page,
@@ -138,5 +138,11 @@ router.get("/history",verifyApiKey, async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 });
+
+// TO TESTING API 
+router.get("/ping", (req, res) => {
+  res.send("pong");
+});
+
 
 module.exports = router;
