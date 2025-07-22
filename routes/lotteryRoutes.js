@@ -115,6 +115,7 @@ router.post("/play",  async (req, res) => {
 });
 
 router.get("/history", async (req, res) => {
+  console.log("📥 History route hit!");
   const page = parseInt(req.query.page) || 1;
   const limit = 10;
 
