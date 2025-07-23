@@ -32,6 +32,7 @@ mongoose
 
   //Lottery Game Routes
 app.use('/api/game', lotteryRoutes);
+console.log("🎯 gameRoutes loaded");
 
 //ADMIN ROUTE
 app.use("/api/admin", adminAuthRoutes);

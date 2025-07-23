@@ -11,15 +11,17 @@ const verifyApiKey = require("../middleware/verifyApiKey");
 router.post("/play", verifyToken, async (req, res) => {
   const userId = req.user.adminId; // 👈 Use this if token was signed with adminId
   console.log("userId = ", userId);
-  console.log("Decoded token:", req.user);
+
+  // console.log("Full body received:", req.body);
+
 
   const {
-    userBigSmall, // "Big" or "Small"
-    bigSmallAmount, // bet for big/small
-    userColor, // "Red", "Green", "Purple"
-    colorAmount, // bet for color
-    userNumber, // number (0-9)
-    numberAmount, // bet for number
+    userBigSmall = null,
+    bigSmallAmount = 0,
+    userColor = null,
+    colorAmount = 0,
+    userNumber = null,
+    numberAmount = 0,
   } = req.body;
 
   console.log(
@@ -69,6 +71,9 @@ router.post("/play", verifyToken, async (req, res) => {
       randomChoiceNumber,
       randomChoiceColor,
       randomChoiceBigSmall,
+      userBigSmall,
+      userColor,
+      userNumber
     });
   } catch (error) {
     console.error("Game play error:", error);
@@ -109,7 +114,6 @@ router.get("/ping", (req, res) => {
   res.send("pong");
 });
 
-
 router.post("/register", async (req, res) => {
   const { username, password, role } = req.body;
 
@@ -132,9 +136,13 @@ router.post("/register", async (req, res) => {
     });
 
     // Optionally return a token immediately
-    const token = jwt.sign({ id: newUser._id, role: newUser.role }, JWT_SECRET, {
-      expiresIn: "1d",
-    });
+    const token = jwt.sign(
+      { id: newUser._id, role: newUser.role },
+      JWT_SECRET,
+      {
+        expiresIn: "1d",
+      }
+    );
 
     res.status(201).json({
       msg: "User registered successfully.",
@@ -146,8 +154,6 @@ router.post("/register", async (req, res) => {
     res.status(500).json({ msg: "Server error during registration." });
   }
 });
-
-
 
 router.post("/generate-dev-token", async (req, res) => {
   const { username } = req.body;
@@ -168,6 +174,5 @@ router.post("/generate-dev-token", async (req, res) => {
     res.status(500).json({ msg: "Server error while generating token" });
   }
 });
-
 
 module.exports = router;
