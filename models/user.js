@@ -1,12 +1,13 @@
 
-
 const mongoose = require("mongoose");
+
+
 
 const gameDataSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
 
-  userChoice: { type: String }, // Big or Small
-  userChoiceAmount: { type: Number },
+  userBigSmall: { type: String }, // Big or Small
+  bigSmallAmount: { type: Number },
 
   userColor: { type: String }, // Red, Green, Purple
   colorAmount: { type: Number },
@@ -19,8 +20,6 @@ const gameDataSchema = new mongoose.Schema({
   randomChoiceColor: String,
   randomChoiceBigSmall: String,
 
-  result: String,
-  winAmount: Number,
   period: String,
 
   createdAt: { type: Date, default: Date.now },

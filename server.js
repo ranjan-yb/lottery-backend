@@ -30,7 +30,6 @@ mongoose
   })
   .catch((err) => console.log("❌ Connection failed:", err));
 
-
   //Lottery Game Routes
 app.use('/api/game', lotteryRoutes);
 
