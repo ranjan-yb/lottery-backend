@@ -2,7 +2,7 @@ require("dotenv").config();
 
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
-const User = require("./models/loginUser"); // adjust path if needed
+const NewUser = require("./models/newUser"); // adjust path if needed
 const express = require("express");
 
 const app = express();
@@ -23,26 +23,61 @@ mongoose
   .catch((err) => console.log("❌ Connection failed:", err));
 
 const seedUsers = async () => {
-  try {
-    // await User.deleteMany(); // optional: clear existing users
+  // try {
+  //   // await User.deleteMany(); // optional: clear existing users
+
+  //   const users = [
+  //     { username: "admin001", password: "adminpass", role: "admin" },
+  //     { username: "player001", password: "playerpass", role: "player" },
+  //     { username: "player002", password: "playerpass", role: "player" },
+  //   ];
+
+  //   for (let user of users) {
+  //     const hashed = await bcrypt.hash(user.password, 10);
+  //     user.password = hashed;
+  //     await User.create(user);
+  //   }
+
+  //   console.log("✅ User seeding complete");
+  //   mongoose.disconnect();
+  // } catch (err) {
+  //   console.error("❌ Seeding failed:", err.message);
+  // }
+
+  // Optional: clear existing entries
+    // await NewUser.deleteMany({});
+
+    const hashedPassword = await bcrypt.hash("test123", 10);
 
     const users = [
-      { username: "admin001", password: "adminpass", role: "admin" },
-      { username: "player001", password: "playerpass", role: "player" },
-      { username: "player002", password: "playerpass", role: "player" },
+      {
+        username: "ranjan",
+        password: hashedPassword,
+        role: "user",
+        referralCode: "RANJAN123",
+        referredBy: "admin",
+        deposit: 1000,
+      },
+      {
+        username: "prince",
+        password: hashedPassword,
+        role: "user",
+        referralCode: "PRINCE123",
+        referredBy: "ranjan",
+        deposit: 500,
+      },
+      {
+        username: "amandeep",
+        password: hashedPassword,
+        role: "user",
+        referralCode: "AMAN123",
+        referredBy: "prince",
+        deposit: 250,
+      },
     ];
 
-    for (let user of users) {
-      const hashed = await bcrypt.hash(user.password, 10);
-      user.password = hashed;
-      await User.create(user);
-    }
-
-    console.log("✅ User seeding complete");
-    mongoose.disconnect();
-  } catch (err) {
-    console.error("❌ Seeding failed:", err.message);
-  }
+    await NewUser.insertMany(users);
+    console.log("✅ All users with role 'user' seeded successfully");
 };
 
 seedUsers();
