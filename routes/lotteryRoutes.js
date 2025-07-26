@@ -6,6 +6,9 @@ const User = require("../models/loginUser");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
+const NewUser = require("../models/newUser"); // ✅ or correct path to your user model
+
+
 const verifyApiKey = require("../middleware/verifyApiKey");
 
 router.post("/play", verifyToken, async (req, res) => {
@@ -138,7 +141,7 @@ router.post("/register", async (req, res) => {
     // Optionally return a token immediately
     const token = jwt.sign(
       { id: newUser._id, role: newUser.role },
-      JWT_SECRET,
+      process.env.JWT_SECRET,
       {
         expiresIn: "1d",
       }
@@ -188,7 +191,7 @@ router.post("/login", async (req, res) => {
   const isMatch = await bcrypt.compare(password, user.password);
   if (!isMatch) return res.status(400).json({ message: "Invalid password" });
 
-  const token = jwt.sign({ id: user._id, role: user.role }, "yourSecretKey", {
+  const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, {
     expiresIn: "1d",
   });
 
