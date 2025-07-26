@@ -8,7 +8,7 @@ const lotteryRoutes = require('./routes/lotteryRoutes')
 const adminAuthRoutes = require("./routes/adminAuth");
 const apiKeyAdminRoutes = require("./routes/apiKeyAdminRoutes");
 
-
+const walletRoutes = require('./routes/walletRoutes')
 
 const app = express();
 const PORT = process.env.PORT || 1000;
@@ -37,3 +37,6 @@ app.use('/api/game', lotteryRoutes);
 //ADMIN ROUTE
 app.use("/api/admin", adminAuthRoutes);
 app.use("/api/admin", apiKeyAdminRoutes);
+
+//wallet
+app.use('/api/game',walletRoutes );
