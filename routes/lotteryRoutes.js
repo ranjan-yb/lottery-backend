@@ -12,8 +12,8 @@ const GameData = require("../models/gameData");
 const bigsmallAmount = require("../models/bigsmallAmount");
 const HistorySave = require("../models/manuplatebigsmallResult");
 const verifyToken = require("../middleware/verifyToken");
-// const User = require("../models/User");
 
+const { getTimeLeft, getCurrentRound } = require("../controller/countdown");
 
 // const verifyApiKey = require("../middleware/verifyApiKey");
 
@@ -370,6 +370,13 @@ router.post("/reset", verifyToken, async (req, res) => {
     console.error("Reset route error:", err);
     res.status(500).json({ msg: "Internal server error" });
   }
+});
+
+
+// COUNTDOWN
+router.get("/time", (req, res) => {
+  const timeLeft = getTimeLeft();
+  res.json({ timeLeft });
 });
 
 
