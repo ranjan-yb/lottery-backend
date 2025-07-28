@@ -375,9 +375,10 @@ router.post("/reset", verifyToken, async (req, res) => {
 
 // COUNTDOWN
 router.get("/time", (req, res) => {
-  const timeLeft = getTimeLeft();
-  res.json({ timeLeft });
+  const result = getTimeLeft();
+  res.json(result); // returns { timeLeft, isPaused }
 });
+
 
 
 
