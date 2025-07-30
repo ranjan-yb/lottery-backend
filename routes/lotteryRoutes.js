@@ -372,7 +372,7 @@ router.post("/play", verifyToken, async (req, res) => {
       !userBigSmall && !userColor && !userNumber && !last5Sec && !last25Sec;
     if (isEmpty) return res.status(200).json({ msg: "No valid bet input." });
 
-    const user = await User.findById(userId);
+    const user = await NewUser.findById(userId);
     if (!user) return res.status(404).json({ msg: "User not found" });
 
     const totalBet =
