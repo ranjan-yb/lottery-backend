@@ -512,7 +512,7 @@ router.post("/play", verifyToken, async (req, res) => {
 // 👇 New RESET route
 router.post("/reset", verifyToken, async (req, res) => {
   try {
-    const bigSmallData = await bigsmallAmount.findOne();
+    const bigSmallData = await bigsmallAmountModel.findOne();
     if (!bigSmallData) {
       return res.status(400).json({ msg: "Game state not found" });
     }
