@@ -9,7 +9,7 @@ const jwt = require("jsonwebtoken");
 const NewUser = require("../models/newUser"); // ✅ or correct path to your user model
 
 const GameData = require("../models/gameData");
-const bigsmallAmount = require("../models/bigsmallAmount");
+const bigsmallAmountModel = require("../models/bigsmallAmount");
 const HistorySave = require("../models/manuplatebigsmallResult");
 const verifyToken = require("../middleware/verifyToken");
 
@@ -91,7 +91,6 @@ const { getTimeLeft, getCurrentRound } = require("../controller/countdown");
 // });
 
 router.get("/history", async (req, res) => {
-  console.log("📥 History route hit!");
   const page = parseInt(req.query.page) || 1;
   const limit = 10;
 
@@ -100,7 +99,7 @@ router.get("/history", async (req, res) => {
     const totalPages = Math.ceil(totalResults / limit);
 
     const history = await GameData.find()
-      .sort({ createdAt: -1 }) // better to sort by time than _id
+      .sort({ createdAt: -1 }) // ✅ sorts latest first
       .skip((page - 1) * limit)
       .limit(limit)
       .select(
@@ -205,6 +204,10 @@ router.post("/login", async (req, res) => {
 });
 
 
+
+
+
+/// UPDATED BACKEND
 // router.post("/play", verifyToken, async (req, res) => {
 //   const userId = req.user.id;
 //   const {
@@ -216,132 +219,132 @@ router.post("/login", async (req, res) => {
 //     numberAmount,
 //     last5Sec,
 //     last25Sec,
+//     timeout
 //   } = req.body;
 
-//   // console.log("full body", req.body);
-//   // console.log("last5Sec detected", last5Sec);
-
 //   let winAmount = 0;
+//   console.log("body =", req.body)
 
 //   try {
+//     // 🛑 Skip if no user input at all (e.g. accidental empty request)
+//     const isEmpty =
+//       !userBigSmall && !userColor && !userNumber && !last5Sec && !last25Sec && !timeout;
+//     if (isEmpty) return res.status(200).json({ msg: "No valid bet input." });
+
 //     const user = await NewUser.findById(userId);
 //     if (!user) return res.status(404).json({ msg: "User not found" });
 
 //     const totalBet =
-//       (bigSmallAmount || 0) + (colorAmount || 0) + (numberAmount || 0);
-//     // if (totalBet === 0) return res.status(400).json({ msg: "No bets placed" });
-//     if (user.deposit < totalBet)
+//       (parseFloat(bigSmallAmount) || 0) +
+//       (parseFloat(colorAmount) || 0) +
+//       (parseFloat(numberAmount) || 0);
+
+//     if (user.deposit < totalBet) {
 //       return res.status(400).json({ msg: "Insufficient wallet balance" });
-
-//     user.deposit -= totalBet; // ✅ Deduct bet immediately
-//     // console.log("balance in wallet", user.deposit);
-
-//     let bigSmallData = await bigsmallAmount.findOne();
-//     if (!bigSmallData) {
-//       bigSmallData = new bigsmallAmount({
-//         bigAmount: 0,
-//         smallAmount: 0,
-//         userbigsmallCount: [],
-//       });
-//       await bigSmallData.save();
-//       // console.log("⚠️ Created new bigSmallData document");
 //     }
 
-//     // ➕ Add to pool
-//     if (userBigSmall === "Big")
-//       bigSmallData.bigAmount += parseFloat(bigSmallAmount);
-//     else if (userBigSmall === "Small")
-//       bigSmallData.smallAmount += parseFloat(bigSmallAmount);
+//     user.deposit -= totalBet;
 
-//     bigSmallData.userbigsmallCount.push(userBigSmall);
-//     await bigSmallData.save();
+//     // ✅ Handle Big/Small update only if user selected it
+//     let bigSmallData;
+//     if (userBigSmall === "Big" || userBigSmall === "Small") {
+//       bigSmallData = await bigsmallAmount.findOneAndUpdate(
+//         {},
+//         {
+//           $inc: {
+//             bigAmount: userBigSmall === "Big" ? parseFloat(bigSmallAmount) : 0,
+//             smallAmount:
+//               userBigSmall === "Small" ? parseFloat(bigSmallAmount) : 0,
+//           },
+//           $push: { userbigsmallCount: userBigSmall },
+//         },
+//         { upsert: true, new: true }
+//       );
+//     } else {
+//       bigSmallData = await bigsmallAmount.findOne(); // needed for winner logic later
+//     }
 
-//     // ✅ If it's the last 5 seconds, process result
-//     if (last5Sec) {
+//     // ✅ Winner logic
+//     if (last5Sec && bigSmallData) {
 //       let winner = null;
+//       const {
+//         bigAmount = 0,
+//         smallAmount = 0,
+//         userbigsmallCount = [],
+//       } = bigSmallData;
 
-//       // Decide winner based on pool
-//       if (bigSmallData.bigAmount > bigSmallData.smallAmount) {
-//         winner = "Small";
-//       } else if (bigSmallData.smallAmount > bigSmallData.bigAmount) {
-//         winner = "Big";
+//       // Decide winner based on amount logic
+//       if (userbigsmallCount.length > 1) {
+//         if (bigAmount > smallAmount) winner = "Small";
+//         else if (smallAmount > bigAmount) winner = "Big";
+//         else winner = Math.random() < 0.5 ? "Big" : "Small";
+//         console.log("⚖️ Equal or mixed bets - Winner:", winner);
+//       } else if (userbigsmallCount.length === 1) {
+//         // Only 1 user played → random winner
+//         winner = Math.random() < 0.5 ? "Big" : "Small";
+//         console.log("🎲 Only 1 user bet - Random winner:", winner);
+//       } else {
+//         // No one bet, pick random
+//         winner = Math.random() < 0.5 ? "Big" : "Small";
 //       }
-//       // else if (bigSmallData.smallAmount === bigSmallData.bigAmount) {
-//       //   winner = Math.random() < 0.5 ? "Big" : "Small";
-//       //   console.log("⚖️ Equal  - randomly chosen winner:", winner);
-//       // }
 
-//       // // MANIPULATE FOR MORE THAN TWO USERS
-//       if (bigSmallData.userbigsmallCount.length >= 2) {
-//         if (bigSmallData.bigAmount > bigSmallData.smallAmount) {
-//           winner = "Small";
-//         } else if (bigSmallData.smallAmount > bigSmallData.bigAmount) {
-//           winner = "Big";
-//         }
-//       }
-
-//       // else if (bigSmallAmount.smallAmount === bigSmallAmount.bigAmount) {
-//       //     winner = Math.random() < 0.5 ? "Big" : "Small";
-//       //     console.log("⚖️ Equal  - randomly chosen winner:", winner);
-//       //   }
-//       // }
-
-//       // ✅ Always generate random color and number
-//       winner = Math.random() < 0.5 ? "Big" : "Small";
-
-//       // Assign winner to correct variable
-//       const randomChoiceBigSmall = winner;
-
+//       // Generate random values
 //       const colors = ["Red", "Green", "Purple"];
 //       const randomChoiceColor =
 //         colors[Math.floor(Math.random() * colors.length)];
 //       const randomChoiceNumber = Math.floor(Math.random() * 10);
 
-//       // ✅ Always save to GameData
+//       // Save game result
 //       const gameData = new GameData({
-//         period: new Date().getTime().toString(), // or use custom generator
+//         period: new Date().getTime().toString(),
 //         randomChoiceBigSmall: winner,
 //         randomChoiceColor,
 //         randomChoiceNumber,
 //       });
 //       await gameData.save();
 
-//       // 🧠 Save result history (Only winning side, not individual user data)
+//       // Save to history
 //       const history = new HistorySave({
 //         manuplateResultHistoryBigorSmall: winner,
 //       });
 //       await history.save();
 
-//       // Reward if user matched Big/Small
-//       if (userBigSmall === randomChoiceBigSmall && bigSmallAmount > 0) {
+//       // Reward for Big/Small
+//       if (userBigSmall === winner && parseFloat(bigSmallAmount) > 0) {
 //         winAmount = parseFloat(bigSmallAmount) * 2;
 //         user.deposit += winAmount;
 //       }
 
-//       // You can optionally handle rewards for color or number too, if needed
+//       // Future: Handle color / number rewards here...
 
 //       await user.save();
 
 //       return res.status(200).json({
-//         bigSmallResult: userBigSmall === randomChoiceBigSmall ? "Win" : "Lose",
+//         bigSmallResult: userBigSmall === winner ? "Win" : "Lose",
 //         colorResult: userColor === randomChoiceColor ? "Win" : "Lose",
 //         numberResult: userNumber === randomChoiceNumber ? "Win" : "Lose",
-//         randomChoiceBigSmall,
+//         randomChoiceBigSmall: winner,
 //         randomChoiceColor,
 //         randomChoiceNumber,
 //       });
 //     }
 
-//     // ⏱️ Reset data if 25 second window is closed
-//     if (req.body.last25Sec === true) {
-//       // console.log(" reste data", last25Sec);
-//       bigSmallData.bigAmount = 0;
-//       bigSmallData.smallAmount = 0;
-//       bigSmallData.userbigsmallCount = [];
-//       await bigSmallData.save();
+//     // ⏱️ Reset for new round (at 25s)
+//     if (last25Sec) {
+//       await bigsmallAmount.updateOne(
+//         {},
+//         {
+//           $set: {
+//             bigAmount: 0,
+//             smallAmount: 0,
+//             userbigsmallCount: [],
+//           },
+//         }
+//       );
 //       return res.status(200).json({ msg: "Game reset for new round" });
 //     }
 
+//     await user.save();
 //     return res.status(200).json({ msg: "Bet placed successfully" });
 //   } catch (err) {
 //     console.error("Play route error:", err);
@@ -350,8 +353,9 @@ router.post("/login", async (req, res) => {
 // });
 
 
-/// UPDATED BACKEND
-router.post("/play", verifyToken, async (req, res) => {
+  // SEPERATE ROUTES FOR USERS
+
+  router.post("/bet", verifyToken, async (req, res) => {
   const userId = req.user.id;
   const {
     userBigSmall,
@@ -360,138 +364,147 @@ router.post("/play", verifyToken, async (req, res) => {
     colorAmount,
     userNumber,
     numberAmount,
-    last5Sec,
-    last25Sec,
   } = req.body;
 
-  let winAmount = 0;
+  console.log("Bet received:", req.body);
+
+  // Ensure at least one type of bet exists
+  if (!userBigSmall && !userColor && !userNumber) {
+    return res.status(400).json({ msg: "At least one bet is required." });
+  }
 
   try {
-    // 🛑 Skip if no user input at all (e.g. accidental empty request)
-    const isEmpty =
-      !userBigSmall && !userColor && !userNumber && !last5Sec && !last25Sec;
-    if (isEmpty) return res.status(200).json({ msg: "No valid bet input." });
-
     const user = await NewUser.findById(userId);
     if (!user) return res.status(404).json({ msg: "User not found" });
 
-    const totalBet =
-      (parseFloat(bigSmallAmount) || 0) +
-      (parseFloat(colorAmount) || 0) +
-      (parseFloat(numberAmount) || 0);
+    let totalBet = 0;
 
-    if (user.deposit < totalBet) {
-      return res.status(400).json({ msg: "Insufficient wallet balance" });
+    if (userBigSmall && bigSmallAmount) {
+      totalBet += parseFloat(bigSmallAmount);
     }
 
-    user.deposit -= totalBet;
+    if (userColor && colorAmount) {
+      totalBet += parseFloat(colorAmount);
+    }
 
-    // ✅ Handle Big/Small update only if user selected it
-    let bigSmallData;
-    if (userBigSmall === "Big" || userBigSmall === "Small") {
-      bigSmallData = await bigsmallAmount.findOneAndUpdate(
+    if ((userNumber !== undefined && userNumber !== null) && numberAmount) {
+      totalBet += parseFloat(numberAmount);
+    }
+
+    if (user.deposit < totalBet) {
+      return res.status(400).json({ msg: "Insufficient balance" });
+    }
+
+    // Deduct from wallet
+    user.deposit -= totalBet;
+    await user.save();
+
+    // Save Big/Small bet (only if applicable)
+    if (userBigSmall && bigSmallAmount) {
+      await bigsmallAmountModel.updateOne(
         {},
         {
           $inc: {
             bigAmount: userBigSmall === "Big" ? parseFloat(bigSmallAmount) : 0,
-            smallAmount:
-              userBigSmall === "Small" ? parseFloat(bigSmallAmount) : 0,
+            smallAmount: userBigSmall === "Small" ? parseFloat(bigSmallAmount) : 0,
           },
           $push: { userbigsmallCount: userBigSmall },
         },
-        { upsert: true, new: true }
+        { upsert: true }
       );
+    }
+
+    // TODO: Add similar updates for Color and Number bets (use separate pools/collections)
+
+    return res.status(200).json({
+      msg: "Bet placed successfully",
+      totalDeducted: totalBet,
+      remainingWallet: user.deposit,
+    });
+  } catch (err) {
+    console.error("Bet route error:", err);
+    res.status(500).json({ msg: "Internal server error" });
+  }
+});
+
+
+router.post("/play", verifyToken, async (req, res) => {
+  const userId = req.user.id;
+  const {
+    last5Sec,
+    userBigSmall,
+    bigSmallAmount,
+    userColor,
+    colorAmount,
+    userNumber,
+    numberAmount,
+  } = req.body;
+
+  if (!last5Sec) {
+    return res.status(400).json({ msg: "Only allowed during result phase" });
+  }
+
+  try {
+    const user = await NewUser.findById(userId);
+    if (!user) return res.status(404).json({ msg: "User not found" });
+
+    const gameData = await bigsmallAmountModel.findOne();
+    if (!gameData) return res.status(400).json({ msg: "Game data not found" });
+
+    const { bigAmount = 0, smallAmount = 0, userbigsmallCount = [] } = gameData;
+
+    // console.log(" userbigSmallCount length = ", userbigsmallCount.length)
+
+    let winner;
+    if (userbigsmallCount.length > 1) {
+      winner =
+        bigAmount > smallAmount
+          ? "Small"
+          : bigAmount < smallAmount
+          ? "Big"
+          : Math.random() < 0.5
+          ? "Big"
+          : "Small";
     } else {
-      bigSmallData = await bigsmallAmount.findOne(); // needed for winner logic later
+      winner = Math.random() < 0.5 ? "Big" : "Small";
+
+      // console.log(" random choice from backend = ", winner)
     }
 
-    // ✅ Winner logic
-    if (last5Sec && bigSmallData) {
-      let winner = null;
-      const {
-        bigAmount = 0,
-        smallAmount = 0,
-        userbigsmallCount = [],
-      } = bigSmallData;
+    // Random color & number
+    const colors = ["Red", "Green", "Purple"];
+    const randomChoiceColor = colors[Math.floor(Math.random() * colors.length)];
+    const randomChoiceNumber = Math.floor(Math.random() * 10);
 
-      // Decide winner based on amount logic
-      if (userbigsmallCount.length > 1) {
-        if (bigAmount > smallAmount) winner = "Small";
-        else if (smallAmount > bigAmount) winner = "Big";
-        else winner = Math.random() < 0.5 ? "Big" : "Small";
-        console.log("⚖️ Equal or mixed bets - Winner:", winner);
-      } else if (userbigsmallCount.length === 1) {
-        // Only 1 user played → random winner
-        winner = Math.random() < 0.5 ? "Big" : "Small";
-        console.log("🎲 Only 1 user bet - Random winner:", winner);
-      } else {
-        // No one bet, pick random
-        winner = Math.random() < 0.5 ? "Big" : "Small";
-      }
-
-      // Generate random values
-      const colors = ["Red", "Green", "Purple"];
-      const randomChoiceColor =
-        colors[Math.floor(Math.random() * colors.length)];
-      const randomChoiceNumber = Math.floor(Math.random() * 10);
-
-      // Save game result
-      const gameData = new GameData({
-        period: new Date().getTime().toString(),
-        randomChoiceBigSmall: winner,
-        randomChoiceColor,
-        randomChoiceNumber,
-      });
-      await gameData.save();
-
-      // Save to history
-      const history = new HistorySave({
-        manuplateResultHistoryBigorSmall: winner,
-      });
-      await history.save();
-
-      // Reward for Big/Small
-      if (userBigSmall === winner && parseFloat(bigSmallAmount) > 0) {
-        winAmount = parseFloat(bigSmallAmount) * 2;
-        user.deposit += winAmount;
-      }
-
-      // Future: Handle color / number rewards here...
-
-      await user.save();
-
-      return res.status(200).json({
-        bigSmallResult: userBigSmall === winner ? "Win" : "Lose",
-        colorResult: userColor === randomChoiceColor ? "Win" : "Lose",
-        numberResult: userNumber === randomChoiceNumber ? "Win" : "Lose",
-        randomChoiceBigSmall: winner,
-        randomChoiceColor,
-        randomChoiceNumber,
-      });
-    }
-
-    // ⏱️ Reset for new round (at 25s)
-    if (last25Sec) {
-      await bigsmallAmount.updateOne(
-        {},
-        {
-          $set: {
-            bigAmount: 0,
-            smallAmount: 0,
-            userbigsmallCount: [],
-          },
-        }
-      );
-      return res.status(200).json({ msg: "Game reset for new round" });
+    // Reward logic
+    let winAmount = 0;
+    if (userBigSmall === winner && parseFloat(bigSmallAmount) > 0) {
+      winAmount = parseFloat(bigSmallAmount) * 2;
+      user.deposit += winAmount;
     }
 
     await user.save();
-    return res.status(200).json({ msg: "Bet placed successfully" });
+
+    // Save to GameData
+    await new GameData({
+      period: new Date().getTime().toString(),
+      randomChoiceBigSmall: winner,
+      randomChoiceColor,
+      randomChoiceNumber,
+    }).save();
+
+    return res.status(200).json({
+      result: userBigSmall === winner ? "Win" : "Lose",
+      winnerBigSmall: winner,
+      randomChoiceColor,
+      randomChoiceNumber,
+    });
   } catch (err) {
     console.error("Play route error:", err);
     res.status(500).json({ msg: "Internal server error" });
   }
 });
+
 
 
 
