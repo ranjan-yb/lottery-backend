@@ -253,7 +253,7 @@ router.post("/login", async (req, res) => {
 
     // Save Big/Small bet (only if applicable)
     if (userBigSmall && bigSmallAmount) {
-      await bigsmallAmountModel.updateOne(
+      await GameStats.updateOne(
         {},
         {
           $inc: {
