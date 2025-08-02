@@ -503,7 +503,7 @@ router.post("/play", verifyToken, async (req, res) => {
 router.post("/reset", verifyToken, async (req, res) => {
   try {
     const gameData = await GameStats.findOne();
-    if (!bigSmallData) {
+    if (!gameData) {
       return res.status(400).json({ msg: "Game state not found" });
     }
 
