@@ -207,7 +207,7 @@ router.post("/login", async (req, res) => {
 
   // SEPERATE ROUTES FOR USERS
 
-  router.post("/bet", verifyToken, async (req, res) => {
+router.post("/bet", verifyToken, async (req, res) => {
   const userId = req.user.id;
   const {
     userBigSmall,
@@ -220,8 +220,7 @@ router.post("/login", async (req, res) => {
 
   console.log("Bet received:", req.body);
 
-  // Ensure at least one type of bet exists
-  if (!userBigSmall && !userColor && !userNumber) {
+  if (!userBigSmall && !userColor && userNumber === undefined) {
     return res.status(400).json({ msg: "At least one bet is required." });
   }
 
@@ -247,11 +246,10 @@ router.post("/login", async (req, res) => {
       return res.status(400).json({ msg: "Insufficient balance" });
     }
 
-    // Deduct from wallet
     user.deposit -= totalBet;
     await user.save();
 
-    // Save Big/Small bet (only if applicable)
+    // 💥 Update Big/Small stats
     if (userBigSmall && bigSmallAmount) {
       await GameStats.updateOne(
         {},
@@ -266,7 +264,39 @@ router.post("/login", async (req, res) => {
       );
     }
 
-    // TODO: Add similar updates for Color and Number bets (use separate pools/collections)
+    // 💥 Update Color stats
+    if (userColor && colorAmount) {
+      const colorField = {
+        Green: "colorGreenAmount",
+        Red: "colorRedAmount",
+        Purple: "colorPurpleAmount",
+      }[userColor];
+
+      if (colorField) {
+        await GameStats.updateOne(
+          {},
+          {
+            $inc: { [colorField]: parseFloat(colorAmount) },
+            $push: { colorCount: userColor },
+          },
+          { upsert: true }
+        );
+      }
+    }
+
+    // 💥 Update Number stats (0–9)
+    if ((userNumber !== undefined && userNumber !== null) && numberAmount) {
+      const numberField = `number${userNumber}Amount`;
+
+      await GameStats.updateOne(
+        {},
+        {
+          $inc: { [numberField]: parseFloat(numberAmount) },
+          $push: { numberCount: userNumber },
+        },
+        { upsert: true }
+      );
+    }
 
     return res.status(200).json({
       msg: "Bet placed successfully",
@@ -278,6 +308,7 @@ router.post("/login", async (req, res) => {
     res.status(500).json({ msg: "Internal server error" });
   }
 });
+
 
 
 
