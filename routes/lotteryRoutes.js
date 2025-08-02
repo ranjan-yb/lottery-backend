@@ -385,7 +385,7 @@ router.post("/play", verifyToken, async (req, res) => {
   }
 
   try {
-    const user = await User.findById(userId);
+    const user = await NewUser.findById(userId);
     if (!user) return res.status(404).json({ msg: "User not found" });
 
     const gameData = await GameStats.findOne();
