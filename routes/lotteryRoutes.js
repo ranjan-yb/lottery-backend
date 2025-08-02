@@ -8,7 +8,8 @@ const jwt = require("jsonwebtoken");
 
 const NewUser = require("../models/newUser"); // ✅ or correct path to your user model
 
-const GameStats = require("../models/gameData");
+const GameData = require("../models/gameData");
+const GameStats = require("../models/gameStats")
 // const bigsmallAmountModel = require("../models/bigsmallAmount");
 
 const verifyToken = require("../middleware/verifyToken");
@@ -471,7 +472,7 @@ router.post("/play", verifyToken, async (req, res) => {
     }
 
     // Save final result to GameData collection
-    await new gameData({
+    await new GameData({
       period: new Date().getTime().toString(),
       randomChoiceBigSmall: winnerBigSmall,
       randomChoiceColor: winnerColor,
@@ -501,14 +502,31 @@ router.post("/play", verifyToken, async (req, res) => {
 
 router.post("/reset", verifyToken, async (req, res) => {
   try {
-    const bigSmallData = await bigsmallAmountModel.findOne();
+    const gameData = await GameStats.findOne();
     if (!bigSmallData) {
       return res.status(400).json({ msg: "Game state not found" });
     }
 
-    bigSmallData.bigAmount = 0;
-    bigSmallData.smallAmount = 0;
-    bigSmallData.userbigsmallCount = [];
+    gameData.bigAmount = 0;
+    gameData.smallAmount = 0;
+    gameData.userbigsmallCount = [];
+    gameData.colorRedAmount = 0;
+    gameData.colorGreenAmount = 0;
+    gameData.colorPurpleAmount = 0;
+    gameData.colorCount = [];
+    gameData.number0Amount = 0;
+    gameData.number1Amount = 0;
+    gameData.number2Amount = 0;
+    gameData.number3Amount = 0;
+    gameData.number4Amount = 0;
+    gameData.number5Amount = 0;
+    gameData.number6Amount = 0;
+    gameData.number7Amount = 0;
+    gameData.number8Amount = 0;
+    gameData.number9Amount = 0;
+    gameData.numberCount = []
+
+
 
     await bigSmallData.save();
 
