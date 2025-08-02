@@ -51,26 +51,10 @@ const seedUsers = async () => {
 
     const users = [
       {
-        username: "ranjan",
+        username: "sourav",
         password: hashedPassword,
         role: "user",
-        referralCode: "RANJAN123",
-        referredBy: "admin",
-        deposit: 1000,
-      },
-      {
-        username: "prince",
-        password: hashedPassword,
-        role: "user",
-        referralCode: "PRINCE123",
-        referredBy: "ranjan",
-        deposit: 500,
-      },
-      {
-        username: "amandeep",
-        password: hashedPassword,
-        role: "user",
-        referralCode: "AMAN123",
+        referralCode: "SOURAV123",
         referredBy: "prince",
         deposit: 250,
       },
