@@ -8,7 +8,7 @@ const jwt = require("jsonwebtoken");
 
 const NewUser = require("../models/newUser"); // ✅ or correct path to your user model
 
-const GameData = require("../models/gameData");
+const GameStats = require("../models/gameData");
 const bigsmallAmountModel = require("../models/bigsmallAmount");
 const HistorySave = require("../models/manuplatebigsmallResult");
 const verifyToken = require("../middleware/verifyToken");
@@ -285,7 +285,6 @@ router.post("/login", async (req, res) => {
 });
 
 
-// PREVIOUS /play code
 
 // router.post("/play", verifyToken, async (req, res) => {
 //   const userId = req.user.id;
@@ -478,7 +477,7 @@ router.post("/play", verifyToken, async (req, res) => {
     }
 
     // Save final result to GameData collection
-    await new GameData({
+    await new gameData({
       period: new Date().getTime().toString(),
       randomChoiceBigSmall: winnerBigSmall,
       randomChoiceColor: winnerColor,

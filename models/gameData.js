@@ -6,48 +6,67 @@ const gameDataSchema = new mongoose.Schema({
     required: true,
   },
 
-  // ✅ Big/Small game
-  userChoiceBigSmall: {
-    type: String, // "Big" | "Small"
-    enum: ["Big", "Small"],
+  // ✅ Big/Small game totals
+  bigAmount: {
+    type: Number,
+    default: 0,
   },
+  smallAmount: {
+    type: Number,
+    default: 0,
+  },
+  userBigSmallCount: {
+    type: Array,
+    default: [],
+  },
+
+  // ✅ Color game totals
+  colorRedAmount: {
+    type: Number,
+    default: 0,
+  },
+  colorGreenAmount: {
+    type: Number,
+    default: 0,
+  },
+  colorPurpleAmount: {
+    type: Number,
+    default: 0,
+  },
+  colorCount: {
+    type: Array,
+    default: [],
+  },
+
+  // ✅ Number game totals
+  number0Amount: { type: Number, default: 0 },
+  number1Amount: { type: Number, default: 0 },
+  number2Amount: { type: Number, default: 0 },
+  number3Amount: { type: Number, default: 0 },
+  number4Amount: { type: Number, default: 0 },
+  number5Amount: { type: Number, default: 0 },
+  number6Amount: { type: Number, default: 0 },
+  number7Amount: { type: Number, default: 0 },
+  number8Amount: { type: Number, default: 0 },
+  number9Amount: { type: Number, default: 0 },
+  numberCount: {
+    type: Array,
+    default: [],
+  },
+
+  // ✅ Final results (for all 3 games)
   randomChoiceBigSmall: {
     type: String,
     enum: ["Big", "Small"],
-  },
-  resultBigSmall: {
-    type: String, // "Win", "Lose", or null
-    enum: ["Win", "Lose"],
-  },
-
-  // ✅ Number game
-  userChoiceNumber: {
-    type: Number, // 0-9
-    min: 0,
-    max: 9,
-  },
-  randomChoiceNumber: {
-    type: Number,
-    min: 0,
-    max: 9,
-  },
-  resultNumber: {
-    type: String, // "Win", "Lose"
-    enum: ["Win", "Lose"],
-  },
-
-  // ✅ Color game
-  userChoiceColor: {
-    type: String,
-    enum: ["Red", "Green", "Purple"], // or whatever your colors are
   },
   randomChoiceColor: {
     type: String,
     enum: ["Red", "Green", "Purple"],
   },
-  resultColor: {
-    type: String,
-    enum: ["Win", "Lose"],
+  randomChoiceNumber: {
+    type: Number,
+    min: 0,
+    max: 9,
   },
 }, { timestamps: true });
 
