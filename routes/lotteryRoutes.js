@@ -9,8 +9,8 @@ const jwt = require("jsonwebtoken");
 const NewUser = require("../models/newUser"); // ✅ or correct path to your user model
 
 const GameStats = require("../models/gameData");
-const bigsmallAmountModel = require("../models/bigsmallAmount");
-const HistorySave = require("../models/manuplatebigsmallResult");
+// const bigsmallAmountModel = require("../models/bigsmallAmount");
+
 const verifyToken = require("../middleware/verifyToken");
 
 const { getTimeLeft, getCurrentRound } = require("../controller/countdown");
@@ -204,12 +204,6 @@ router.post("/login", async (req, res) => {
 });
 
 
-
-
-
-
-
-
   // SEPERATE ROUTES FOR USERS
 
   router.post("/bet", verifyToken, async (req, res) => {
@@ -286,87 +280,6 @@ router.post("/login", async (req, res) => {
 
 
 
-router.post("/play", verifyToken, async (req, res) => {
-  const userId = req.user.id;
-  const {
-    last5Sec,
-    userBigSmall,
-    bigSmallAmount,
-    userColor,
-    colorAmount,
-    userNumber,
-    numberAmount,
-  } = req.body;
-
-  if (!last5Sec) {
-    return res.status(400).json({ msg: "Only allowed during result phase" });
-  }
-
-  try {
-    const user = await NewUser.findById(userId);
-    if (!user) return res.status(404).json({ msg: "User not found" });
-
-    const gameData = await bigsmallAmountModel.findOne();
-    if (!gameData) return res.status(400).json({ msg: "Game data not found" });
-
-    const { bigAmount = 0, smallAmount = 0, userbigsmallCount = [] } = gameData;
-
-    // console.log(" userbigSmallCount length = ", userbigsmallCount.length)
-
-    let winner;
-    if (userbigsmallCount.length > 1) {
-      winner =
-        bigAmount > smallAmount
-          ? "Small"
-          : bigAmount < smallAmount
-          ? "Big"
-          : Math.random() < 0.5
-          ? "Big"
-          : "Small";
-    } else {
-      winner = Math.random() < 0.5 ? "Big" : "Small";
-
-      // console.log(" random choice from backend = ", winner)
-    }
-
-    // Random color & number
-    const colors = ["Red", "Green", "Purple"];
-    const randomChoiceColor = colors[Math.floor(Math.random() * colors.length)];
-    const randomChoiceNumber = Math.floor(Math.random() * 10);
-
-    // Reward logic
-    let winAmount = 0;
-    if (userBigSmall === winner && parseFloat(bigSmallAmount) > 0) {
-      winAmount = parseFloat(bigSmallAmount) * 2;
-      user.deposit += winAmount;
-    }
-
-    await user.save();
-
-    // Save to GameData
-    await new gameData({
-      period: new Date().getTime().toString(),
-      randomChoiceBigSmall: winner,
-      randomChoiceColor,
-      randomChoiceNumber,
-    }).save();
-
-    return res.status(200).json({
-      result: userBigSmall === winner ? "Win" : "Lose",
-      winnerBigSmall: winner,
-      randomChoiceColor,
-      randomChoiceNumber,
-    });
-  } catch (err) {
-    console.error("Play route error:", err);
-    res.status(500).json({ msg: "Internal server error" });
-  }
-});
-
-
-
-
-// UPDATED /play route by Prince
 // router.post("/play", verifyToken, async (req, res) => {
 //   const userId = req.user.id;
 //   const {
@@ -387,15 +300,16 @@ router.post("/play", verifyToken, async (req, res) => {
 //     const user = await NewUser.findById(userId);
 //     if (!user) return res.status(404).json({ msg: "User not found" });
 
-//     const gameData = await GameStats.findOne();
+//     const gameData = await bigsmallAmountModel.findOne();
 //     if (!gameData) return res.status(400).json({ msg: "Game data not found" });
 
-//     // ===== BIG-SMALL WINNER =====
 //     const { bigAmount = 0, smallAmount = 0, userbigsmallCount = [] } = gameData;
-//     let winnerBigSmall;
 
+//     // console.log(" userbigSmallCount length = ", userbigsmallCount.length)
+
+//     let winner;
 //     if (userbigsmallCount.length > 1) {
-//       winnerBigSmall =
+//       winner =
 //         bigAmount > smallAmount
 //           ? "Small"
 //           : bigAmount < smallAmount
@@ -404,97 +318,177 @@ router.post("/play", verifyToken, async (req, res) => {
 //           ? "Big"
 //           : "Small";
 //     } else {
-//       winnerBigSmall = Math.random() < 0.5 ? "Big" : "Small";
+//       winner = Math.random() < 0.5 ? "Big" : "Small";
+
+//       // console.log(" random choice from backend = ", winner)
 //     }
 
-//     // ===== COLOR WINNER =====
-//     const { colorRedAmount = 0, colorGreenAmount = 0, colorPurpleAmount = 0, colorCount = [] } = gameData;
+//     // Random color & number
+//     const colors = ["Red", "Green", "Purple"];
+//     const randomChoiceColor = colors[Math.floor(Math.random() * colors.length)];
+//     const randomChoiceNumber = Math.floor(Math.random() * 10);
 
-//     let winnerColor;
-//     if (colorCount.length > 1) {
-//       const colorBets = {
-//         Red: colorRedAmount,
-//         Green: colorGreenAmount,
-//         Purple: colorPurpleAmount,
-//       };
-
-//       const sortedColors = Object.entries(colorBets).sort((a, b) => a[1] - b[1]);
-//       const [lowestColor, lowestAmt] = sortedColors[0];
-//       const secondAmt = sortedColors[1][1];
-
-//       winnerColor =
-//         lowestAmt < secondAmt
-//           ? lowestColor
-//           : colors[Math.floor(Math.random() * colors.length)];
-//     } else {
-//       const colors = ["Red", "Green", "Purple"];
-//       winnerColor = colors[Math.floor(Math.random() * colors.length)];
-//     }
-
-//     // ===== NUMBER WINNER =====
-//     const { numberCount = [] } = gameData;
-
-//     let winnerNumber;
-//     if (numberCount.length > 1) {
-//       let numberBets = [];
-
-//       for (let i = 0; i <= 9; i++) {
-//         numberBets.push({ number: i, amount: gameData[`number${i}Amount`] || 0 });
-//       }
-
-//       numberBets.sort((a, b) => a.amount - b.amount);
-
-//       if (numberBets[0].amount < numberBets[1].amount) {
-//         winnerNumber = numberBets[0].number;
-//       } else {
-//         winnerNumber = Math.floor(Math.random() * 10);
-//       }
-//     } else {
-//       winnerNumber = Math.floor(Math.random() * 10);
-//     }
-
-//     // ===== REWARD LOGIC =====
+//     // Reward logic
 //     let winAmount = 0;
-
-//     // Big/Small reward
-//     if (userBigSmall === winnerBigSmall && parseFloat(bigSmallAmount) > 0) {
-//       winAmount += parseFloat(bigSmallAmount) * 2;
-//     }
-
-//     // Color reward
-//     if (userColor === winnerColor && parseFloat(colorAmount) > 0) {
-//       winAmount += parseFloat(colorAmount) * 3;
-//     }
-
-//     // Number reward
-//     if (parseInt(userNumber) === winnerNumber && parseFloat(numberAmount) > 0) {
-//       winAmount += parseFloat(numberAmount) * 10;
-//     }
-
-//     if (winAmount > 0) {
+//     if (userBigSmall === winner && parseFloat(bigSmallAmount) > 0) {
+//       winAmount = parseFloat(bigSmallAmount) * 2;
 //       user.deposit += winAmount;
-//       await user.save();
 //     }
 
-//     // Save final result to GameData collection
+//     await user.save();
+
+//     // Save to GameData
 //     await new gameData({
 //       period: new Date().getTime().toString(),
-//       randomChoiceBigSmall: winnerBigSmall,
-//       randomChoiceColor: winnerColor,
-//       randomChoiceNumber: winnerNumber,
+//       randomChoiceBigSmall: winner,
+//       randomChoiceColor,
+//       randomChoiceNumber,
 //     }).save();
 
 //     return res.status(200).json({
-//       result: winAmount > 0 ? "Win" : "Lose",
-//       winnerBigSmall,
-//       winnerColor,
-//       winnerNumber,
+//       result: userBigSmall === winner ? "Win" : "Lose",
+//       winnerBigSmall: winner,
+//       randomChoiceColor,
+//       randomChoiceNumber,
 //     });
 //   } catch (err) {
 //     console.error("Play route error:", err);
 //     res.status(500).json({ msg: "Internal server error" });
 //   }
 // });
+
+
+
+
+// UPDATED /play route by Prince
+router.post("/play", verifyToken, async (req, res) => {
+  const userId = req.user.id;
+  const {
+    last5Sec,
+    userBigSmall,
+    bigSmallAmount,
+    userColor,
+    colorAmount,
+    userNumber,
+    numberAmount,
+  } = req.body;
+
+  if (!last5Sec) {
+    return res.status(400).json({ msg: "Only allowed during result phase" });
+  }
+
+  try {
+    const user = await NewUser.findById(userId);
+    if (!user) return res.status(404).json({ msg: "User not found" });
+
+    const gameData = await GameStats.findOne();
+    if (!gameData) return res.status(400).json({ msg: "Game data not found" });
+
+    // ===== BIG-SMALL WINNER =====
+    const { bigAmount = 0, smallAmount = 0, userbigsmallCount = [] } = gameData;
+    let winnerBigSmall;
+
+    if (userbigsmallCount.length > 1) {
+      winnerBigSmall =
+        bigAmount > smallAmount
+          ? "Small"
+          : bigAmount < smallAmount
+          ? "Big"
+          : Math.random() < 0.5
+          ? "Big"
+          : "Small";
+    } else {
+      winnerBigSmall = Math.random() < 0.5 ? "Big" : "Small";
+    }
+
+    // ===== COLOR WINNER =====
+    const { colorRedAmount = 0, colorGreenAmount = 0, colorPurpleAmount = 0, colorCount = [] } = gameData;
+
+    let winnerColor;
+    if (colorCount.length > 1) {
+      const colorBets = {
+        Red: colorRedAmount,
+        Green: colorGreenAmount,
+        Purple: colorPurpleAmount,
+      };
+
+      const sortedColors = Object.entries(colorBets).sort((a, b) => a[1] - b[1]);
+      const [lowestColor, lowestAmt] = sortedColors[0];
+      const secondAmt = sortedColors[1][1];
+
+      winnerColor =
+        lowestAmt < secondAmt
+          ? lowestColor
+          : colors[Math.floor(Math.random() * colors.length)];
+    } else {
+      const colors = ["Red", "Green", "Purple"];
+      winnerColor = colors[Math.floor(Math.random() * colors.length)];
+    }
+
+    // ===== NUMBER WINNER =====
+    const { numberCount = [] } = gameData;
+
+    let winnerNumber;
+    if (numberCount.length > 1) {
+      let numberBets = [];
+
+      for (let i = 0; i <= 9; i++) {
+        numberBets.push({ number: i, amount: gameData[`number${i}Amount`] || 0 });
+      }
+
+      numberBets.sort((a, b) => a.amount - b.amount);
+
+      if (numberBets[0].amount < numberBets[1].amount) {
+        winnerNumber = numberBets[0].number;
+      } else {
+        winnerNumber = Math.floor(Math.random() * 10);
+      }
+    } else {
+      winnerNumber = Math.floor(Math.random() * 10);
+    }
+
+    // ===== REWARD LOGIC =====
+    let winAmount = 0;
+
+    // Big/Small reward
+    if (userBigSmall === winnerBigSmall && parseFloat(bigSmallAmount) > 0) {
+      winAmount += parseFloat(bigSmallAmount) * 2;
+    }
+
+    // Color reward
+    if (userColor === winnerColor && parseFloat(colorAmount) > 0) {
+      winAmount += parseFloat(colorAmount) * 3;
+    }
+
+    // Number reward
+    if (parseInt(userNumber) === winnerNumber && parseFloat(numberAmount) > 0) {
+      winAmount += parseFloat(numberAmount) * 10;
+    }
+
+    if (winAmount > 0) {
+      user.deposit += winAmount;
+      await user.save();
+    }
+
+    // Save final result to GameData collection
+    await new gameData({
+      period: new Date().getTime().toString(),
+      randomChoiceBigSmall: winnerBigSmall,
+      randomChoiceColor: winnerColor,
+      randomChoiceNumber: winnerNumber,
+    }).save();
+
+    return res.status(200).json({
+      result: winAmount > 0 ? "Win" : "Lose",
+      winnerBigSmall,
+      winnerColor,
+      winnerNumber,
+    });
+  } catch (err) {
+    console.error("Play route error:", err);
+    res.status(500).json({ msg: "Internal server error" });
+  }
+});
 
 
 
