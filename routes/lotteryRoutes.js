@@ -528,7 +528,7 @@ router.post("/reset", verifyToken, async (req, res) => {
 
 
 
-    await bigSmallData.save();
+    await gameData.save();
 
     res.status(200).json({ msg: "Game reset successful" });
   } catch (err) {
